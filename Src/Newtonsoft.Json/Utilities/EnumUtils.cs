@@ -34,6 +34,12 @@ using System.Linq;
 #endif
 using System.Reflection;
 
+#if !NET35_CF
+using static System.Int32;
+#else
+using static System.Int322;
+#endif
+
 namespace Newtonsoft.Json.Utilities
 {
     internal static class EnumUtils
@@ -221,7 +227,7 @@ namespace Newtonsoft.Json.Utilities
 
                 if (disallowValue)
                 {
-                    bool isNumber = int.TryParse(finalEnumText, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int _);
+                    bool isNumber = TryParse(finalEnumText, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int _);
 
                     if (isNumber)
                     {

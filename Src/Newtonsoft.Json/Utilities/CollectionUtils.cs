@@ -358,7 +358,11 @@ namespace Newtonsoft.Json.Utilities
         // array. With 4.5 and up we use AggressiveInlining just to be sure, so it's
         // effectively the same as calling Array.Empty<T> even when not available.
 #if HAVE_METHOD_IMPL_ATTRIBUTE
+#if !NET35_CF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#else
+        [MethodImpl((MethodImplOptions)MethodImplOptions2.AggressiveInlining)]
+#endif
 #endif
         public static T[] ArrayEmpty<T>()
         {

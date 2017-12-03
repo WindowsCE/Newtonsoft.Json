@@ -28,6 +28,12 @@ using System.IO;
 using System.Xml;
 using System.Globalization;
 
+#if !NET35_CF
+using static System.DateTime;
+#else
+using static System.DateTime2;
+#endif
+
 namespace Newtonsoft.Json.Utilities
 {
     internal static class DateTimeUtils
@@ -231,45 +237,45 @@ namespace Newtonsoft.Json.Utilities
                     break;
 
                 case ParserTimeZone.LocalWestOfUtc:
-                {
-                    TimeSpan offset = new TimeSpan(dateTimeParser.ZoneHour, dateTimeParser.ZoneMinute, 0);
-                    ticks = d.Ticks + offset.Ticks;
-                    if (ticks <= DateTime.MaxValue.Ticks)
                     {
-                        d = new DateTime(ticks, DateTimeKind.Utc).ToLocalTime();
-                    }
-                    else
-                    {
-                        ticks += d.GetUtcOffset().Ticks;
-                        if (ticks > DateTime.MaxValue.Ticks)
+                        TimeSpan offset = new TimeSpan(dateTimeParser.ZoneHour, dateTimeParser.ZoneMinute, 0);
+                        ticks = d.Ticks + offset.Ticks;
+                        if (ticks <= DateTime.MaxValue.Ticks)
                         {
-                            ticks = DateTime.MaxValue.Ticks;
+                            d = new DateTime(ticks, DateTimeKind.Utc).ToLocalTime();
                         }
+                        else
+                        {
+                            ticks += d.GetUtcOffset().Ticks;
+                            if (ticks > DateTime.MaxValue.Ticks)
+                            {
+                                ticks = DateTime.MaxValue.Ticks;
+                            }
 
-                        d = new DateTime(ticks, DateTimeKind.Local);
+                            d = new DateTime(ticks, DateTimeKind.Local);
+                        }
+                        break;
                     }
-                    break;
-                }
                 case ParserTimeZone.LocalEastOfUtc:
-                {
-                    TimeSpan offset = new TimeSpan(dateTimeParser.ZoneHour, dateTimeParser.ZoneMinute, 0);
-                    ticks = d.Ticks - offset.Ticks;
-                    if (ticks >= DateTime.MinValue.Ticks)
                     {
-                        d = new DateTime(ticks, DateTimeKind.Utc).ToLocalTime();
-                    }
-                    else
-                    {
-                        ticks += d.GetUtcOffset().Ticks;
-                        if (ticks < DateTime.MinValue.Ticks)
+                        TimeSpan offset = new TimeSpan(dateTimeParser.ZoneHour, dateTimeParser.ZoneMinute, 0);
+                        ticks = d.Ticks - offset.Ticks;
+                        if (ticks >= DateTime.MinValue.Ticks)
                         {
-                            ticks = DateTime.MinValue.Ticks;
+                            d = new DateTime(ticks, DateTimeKind.Utc).ToLocalTime();
                         }
+                        else
+                        {
+                            ticks += d.GetUtcOffset().Ticks;
+                            if (ticks < DateTime.MinValue.Ticks)
+                            {
+                                ticks = DateTime.MinValue.Ticks;
+                            }
 
-                        d = new DateTime(ticks, DateTimeKind.Local);
+                            d = new DateTime(ticks, DateTimeKind.Local);
+                        }
+                        break;
                     }
-                    break;
-                }
             }
 
             dt = EnsureDateTime(d, dateTimeZoneHandling);
@@ -302,7 +308,11 @@ namespace Newtonsoft.Json.Utilities
                     offset = new TimeSpan(dateTimeParser.ZoneHour, dateTimeParser.ZoneMinute, 0);
                     break;
                 default:
+#if HAVE_TIME_ZONE_INFO
                     offset = TimeZoneInfo.Local.GetUtcOffset(d);
+#else
+                    offset = TimeZone.CurrentTimeZone.GetUtcOffset(new DateTime(0, DateTimeKind.Local));
+#endif
                     break;
             }
 
@@ -393,7 +403,7 @@ namespace Newtonsoft.Json.Utilities
                 }
                 else if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[0]) && s[10] == 'T')
                 {
-                    if (DateTime.TryParseExact(s, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out dt))
+                    if (TryParseExact(s, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out dt))
                     {
                         dt = EnsureDateTime(dt, dateTimeZoneHandling);
                         return true;
@@ -553,7 +563,7 @@ namespace Newtonsoft.Json.Utilities
         private static bool TryParseDateTimeExact(string text, DateTimeZoneHandling dateTimeZoneHandling, string dateFormatString, CultureInfo culture, out DateTime dt)
         {
             DateTime temp;
-            if (DateTime.TryParseExact(text, dateFormatString, culture, DateTimeStyles.RoundtripKind, out temp))
+            if (TryParseExact(text, dateFormatString, culture, DateTimeStyles.RoundtripKind, out temp))
             {
                 temp = EnsureDateTime(temp, dateTimeZoneHandling);
                 dt = temp;

@@ -38,6 +38,20 @@ using Newtonsoft.Json.Utilities.LinqBridge;
 using System.Linq;
 #endif
 
+#if !NET35_CF
+using static System.Boolean;
+using static System.DateTime;
+using static System.Decimal;
+using static System.Double;
+using static System.Int32;
+#else
+using static System.Boolean2;
+using static System.DateTime2;
+using static System.Decimal2;
+using static System.Double2;
+using static System.Int322;
+#endif
+
 namespace Newtonsoft.Json
 {
     /// <summary>
@@ -448,7 +462,7 @@ namespace Newtonsoft.Json
             }
 
             int i;
-            if (int.TryParse(s, NumberStyles.Integer, Culture, out i))
+            if (TryParse(s, NumberStyles.Integer, Culture, out i))
             {
                 SetToken(JsonToken.Integer, i, false);
                 return i;
@@ -660,7 +674,7 @@ namespace Newtonsoft.Json
             }
 
             double d;
-            if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, Culture, out d))
+            if (TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, Culture, out d))
             {
                 SetToken(JsonToken.Float, d, false);
                 return d;
@@ -721,7 +735,7 @@ namespace Newtonsoft.Json
             }
 
             bool b;
-            if (bool.TryParse(s, out b))
+            if (TryParse(s, out b))
             {
                 SetToken(JsonToken.Boolean, b, false);
                 return b;
@@ -783,7 +797,7 @@ namespace Newtonsoft.Json
             }
 
             decimal d;
-            if (decimal.TryParse(s, NumberStyles.Number, Culture, out d))
+            if (TryParse(s, NumberStyles.Number, Culture, out d))
             {
                 SetToken(JsonToken.Float, d, false);
                 return d;
@@ -840,7 +854,7 @@ namespace Newtonsoft.Json
                 return dt;
             }
 
-            if (DateTime.TryParse(s, Culture, DateTimeStyles.RoundtripKind, out dt))
+            if (TryParse(s, Culture, DateTimeStyles.RoundtripKind, out dt))
             {
                 dt = DateTimeUtils.EnsureDateTime(dt, DateTimeZoneHandling);
                 SetToken(JsonToken.Date, dt, false);

@@ -381,9 +381,9 @@ namespace Newtonsoft.Json.Converters
         }
     }
 #endif
-#endregion
+    #endregion
 
-#region Interfaces
+    #region Interfaces
     internal interface IXmlDocument : IXmlNode
     {
         IXmlNode CreateComment(string text);
@@ -438,9 +438,9 @@ namespace Newtonsoft.Json.Converters
         string NamespaceUri { get; }
         object WrappedNode { get; }
     }
-#endregion
+    #endregion
 
-#region XNodeWrappers
+    #region XNodeWrappers
 #if HAVE_XLINQ
     internal class XDeclarationWrapper : XObjectWrapper, IXmlDeclaration
     {
@@ -1069,7 +1069,7 @@ namespace Newtonsoft.Json.Converters
         }
     }
 #endif
-#endregion
+    #endregion
 
     /// <summary>
     /// Converts XML to and from JSON.
@@ -1105,7 +1105,7 @@ namespace Newtonsoft.Json.Converters
         /// <value><c>true</c> if the JSON root object is omitted; otherwise, <c>false</c>.</value>
         public bool OmitRootObject { get; set; }
 
-#region Writing
+        #region Writing
         /// <summary>
         /// Writes the JSON representation of the object.
         /// </summary>
@@ -1265,106 +1265,106 @@ namespace Newtonsoft.Json.Converters
             switch (node.ChildNodes.Count)
             {
                 case 0:
-                {
-                    // nothing to serialize
-                    break;
-                }
-                case 1:
-                {
-                    // avoid grouping when there is only one node
-                    string nodeName = GetPropertyName(node.ChildNodes[0], manager);
-                    WriteGroupedNodes(writer, manager, writePropertyName, node.ChildNodes, nodeName);
-                    break;
-                }
-                default:
-                {
-                    // check whether nodes have the same name
-                    // if they don't then group into dictionary together by name
-
-                    // value of dictionary will be a single IXmlNode when there is one for a name,
-                    // or a List<IXmlNode> when there are multiple
-                    Dictionary<string, object> nodesGroupedByName = null;
-
-                    string nodeName = null;
-
-                    for (int i = 0; i < node.ChildNodes.Count; i++)
                     {
-                        IXmlNode childNode = node.ChildNodes[i];
-                        string currentNodeName = GetPropertyName(childNode, manager);
+                        // nothing to serialize
+                        break;
+                    }
+                case 1:
+                    {
+                        // avoid grouping when there is only one node
+                        string nodeName = GetPropertyName(node.ChildNodes[0], manager);
+                        WriteGroupedNodes(writer, manager, writePropertyName, node.ChildNodes, nodeName);
+                        break;
+                    }
+                default:
+                    {
+                        // check whether nodes have the same name
+                        // if they don't then group into dictionary together by name
 
-                        if (nodesGroupedByName == null)
+                        // value of dictionary will be a single IXmlNode when there is one for a name,
+                        // or a List<IXmlNode> when there are multiple
+                        Dictionary<string, object> nodesGroupedByName = null;
+
+                        string nodeName = null;
+
+                        for (int i = 0; i < node.ChildNodes.Count; i++)
                         {
-                            if (nodeName == null)
+                            IXmlNode childNode = node.ChildNodes[i];
+                            string currentNodeName = GetPropertyName(childNode, manager);
+
+                            if (nodesGroupedByName == null)
                             {
-                                nodeName = currentNodeName;
-                            }
-                            else if (currentNodeName == nodeName)
-                            {
-                                // current node name matches others
-                            }
-                            else
-                            {
-                                nodesGroupedByName = new Dictionary<string, object>();
-                                if (i > 1)
+                                if (nodeName == null)
                                 {
-                                    List<IXmlNode> nodes = new List<IXmlNode>(i);
-                                    for (int j = 0; j < i; j++)
-                                    {
-                                        nodes.Add(node.ChildNodes[j]);
-                                    }
-                                    nodesGroupedByName.Add(nodeName, nodes);
+                                    nodeName = currentNodeName;
+                                }
+                                else if (currentNodeName == nodeName)
+                                {
+                                    // current node name matches others
                                 }
                                 else
                                 {
-                                    nodesGroupedByName.Add(nodeName, node.ChildNodes[0]);
+                                    nodesGroupedByName = new Dictionary<string, object>();
+                                    if (i > 1)
+                                    {
+                                        List<IXmlNode> nodes = new List<IXmlNode>(i);
+                                        for (int j = 0; j < i; j++)
+                                        {
+                                            nodes.Add(node.ChildNodes[j]);
+                                        }
+                                        nodesGroupedByName.Add(nodeName, nodes);
+                                    }
+                                    else
+                                    {
+                                        nodesGroupedByName.Add(nodeName, node.ChildNodes[0]);
+                                    }
+                                    nodesGroupedByName.Add(currentNodeName, childNode);
                                 }
-                                nodesGroupedByName.Add(currentNodeName, childNode);
                             }
+                            else
+                            {
+                                object value;
+                                if (!nodesGroupedByName.TryGetValue(currentNodeName, out value))
+                                {
+                                    nodesGroupedByName.Add(currentNodeName, childNode);
+                                }
+                                else
+                                {
+                                    List<IXmlNode> nodes = value as List<IXmlNode>;
+                                    if (nodes == null)
+                                    {
+                                        nodes = new List<IXmlNode> { (IXmlNode)value };
+                                        nodesGroupedByName[currentNodeName] = nodes;
+                                    }
+
+                                    nodes.Add(childNode);
+                                }
+                            }
+                        }
+
+                        if (nodesGroupedByName == null)
+                        {
+                            WriteGroupedNodes(writer, manager, writePropertyName, node.ChildNodes, nodeName);
                         }
                         else
                         {
-                            object value;
-                            if (!nodesGroupedByName.TryGetValue(currentNodeName, out value))
+                            // loop through grouped nodes. write single name instances as normal,
+                            // write multiple names together in an array
+                            foreach (KeyValuePair<string, object> nodeNameGroup in nodesGroupedByName)
                             {
-                                nodesGroupedByName.Add(currentNodeName, childNode);
-                            }
-                            else
-                            {
-                                List<IXmlNode> nodes = value as List<IXmlNode>;
-                                if (nodes == null)
+                                List<IXmlNode> nodes = nodeNameGroup.Value as List<IXmlNode>;
+                                if (nodes != null)
                                 {
-                                    nodes = new List<IXmlNode> {(IXmlNode)value};
-                                    nodesGroupedByName[currentNodeName] = nodes;
+                                    WriteGroupedNodes(writer, manager, writePropertyName, nodes, nodeNameGroup.Key);
                                 }
-
-                                nodes.Add(childNode);
+                                else
+                                {
+                                    WriteGroupedNodes(writer, manager, writePropertyName, (IXmlNode)nodeNameGroup.Value, nodeNameGroup.Key);
+                                }
                             }
                         }
+                        break;
                     }
-
-                    if (nodesGroupedByName == null)
-                    {
-                        WriteGroupedNodes(writer, manager, writePropertyName, node.ChildNodes, nodeName);
-                    }
-                    else
-                    {
-                        // loop through grouped nodes. write single name instances as normal,
-                        // write multiple names together in an array
-                        foreach (KeyValuePair<string, object> nodeNameGroup in nodesGroupedByName)
-                        {
-                            List<IXmlNode> nodes = nodeNameGroup.Value as List<IXmlNode>;
-                            if (nodes != null)
-                            {
-                                WriteGroupedNodes(writer, manager, writePropertyName, nodes, nodeNameGroup.Key);
-                            }
-                            else
-                            {
-                                WriteGroupedNodes(writer, manager, writePropertyName, (IXmlNode)nodeNameGroup.Value, nodeNameGroup.Key);
-                            }
-                        }
-                    }
-                    break;
-                }
             }
         }
 
@@ -1597,9 +1597,9 @@ namespace Newtonsoft.Json.Converters
             }
             return true;
         }
-#endregion
+        #endregion
 
-#region Reading
+        #region Reading
         /// <summary>
         /// Reads the JSON representation of the object.
         /// </summary>
@@ -1885,7 +1885,11 @@ namespace Newtonsoft.Json.Converters
 #if HAVE_DATE_TIME_OFFSET
                     if (reader.Value is DateTimeOffset)
                     {
+#if !NET35_CF
                         return XmlConvert.ToString((DateTimeOffset)reader.Value);
+#else
+                        return ((DateTimeOffset)reader.Value).ToString("o");
+#endif
                     }
 
 #endif
@@ -2278,7 +2282,7 @@ namespace Newtonsoft.Json.Converters
 
             return false;
         }
-#endregion
+        #endregion
 
         /// <summary>
         /// Determines whether this instance can convert the specified value type.

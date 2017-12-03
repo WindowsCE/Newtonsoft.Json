@@ -34,6 +34,8 @@ using System.Security;
 // associated with an assembly.
 #if NET20
 [assembly: AllowPartiallyTrustedCallers]
+#elif NET35_CF
+// Nothing to do.
 #elif NET35
 [assembly: AllowPartiallyTrustedCallers]
 #elif NET40
